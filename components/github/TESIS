@@ -1,0 +1,107 @@
+#Librerias usadas
+
+library(readxl)
+library(table1)
+library(mosaic)
+library(DescTools)
+library(ggplot2)
+library (tidyverse)
+library(readr)
+library(dplyr)
+library(lubridate)# fechas
+require(reshape)
+library(geoR)
+library(MASS)
+
+#Lectura bases de datos
+
+basecovid <- read_csv("data/basecovid.csv")
+MUN_COL <- read_excel("data/MUN_COL.xlsx")
+BASE_COV19_IPM <- read_csv("data/BASE_COV19_IPM.csv")
+BASE_COV19_IPM <- BASE_COV19_IPM %>% select(CodeM, nameM, DEN_POB, IPM_MUN, PRE_HTA,PRE_DM, PRE_ERC, PRE_CA) %>% group_by(CodeM) %>% distinct()
+
+# Limpieza base de datos CASOS  COVID
+
+#Fechas 
+
+basecovid$`fecha reporte web`<- as.Date(basecovid$`fecha reporte web`,format="%Y/%m/%d")
+basecovid$`Fecha de notificación`<- as.Date(basecovid$`Fecha de notificación`,format="%m/%Y")
+basecovid$`Fecha de diagnóstico`<- as.Date(basecovid$`Fecha de diagnóstico`,format="%m/%Y")
+basecovid$`Fecha de inicio de síntomas`<- as.Date(basecovid$`Fecha de inicio de síntomas`,format="%m/%Y")
+basecovid$`Fecha de muerte`<- as.Date(basecovid$`Fecha de muerte`,format="%m/%Y")
+basecovid$`Fecha de recuperación`<- as.Date(basecovid$`Fecha de recuperación`,format="%m/%Y")
+basecovid$año <- as.numeric(format(basecovid$`Fecha de diagnóstico`,"%Y"))
+basecovid$mes <- as.numeric(format(basecovid$`Fecha de diagnóstico`,"%m"))
+
+
+table(basecovid$año)
+
+# seleccionar solo año 2020 y 2021, y municipios elegidos 
+
+
+basecovid<-basecovid   %>% 
+  filter(año %in% c("2020","2021"))  
+
+basecovidprueba<-basecovid   %>% 
+  filter(`Código DIVIPOLA municipio` %in% c(88001,88564,91263,91405,91407,91430,91460,91530,91536,91669,91798,94343,94883,94884,94885,94886,94887,94888,97511,97777,97889))  
+
+excluidos<- c(88001,88564,91263,91405,91407,91430,91460,91530,91536,91669,91798,94343,94883,94884,94885,94886,94887,94888,97511,97777,97889)
+
+excluidos_2<-c (88001,88564,91263,91405,91407,91430,91460,91530,91536,91669,91798,94343,94883,94884,94885,94886,94887,94888,97511,97777,97889,8638,15106,15131,15368,15401,18860,19050,19100,19290,19473,19517,19701,23079,23678,25258,25312,25402,25483,25658,27615,41319,41530,41676,44035,44874,47205,47675,50313,50318,50590,50689,52083,52215,52260,52399,52473,52480,52612,52685,52693,54673,54820,63001,63111,63212,66075,66687,68020,68077,68092,68101,68121,68176,68207,68250,68320,68615,68669,68705,68773,68872,70110,70400,70717,70771,73678,73770,73873,76054,76100,76130,76400,76403,76606,76670,85300,85440,86755,86760,94663,95015,95200)
+
+
+
+#BASE DE DATOS DE MUNICIPIOS 
+
+#numero de casos por municipio
+
+
+tablamun<-as.data.frame(table(basecovid_final$`Código DIVIPOLA municipio`))
+tablamun = rename(tablamun, c(Freq="Total_casos"))
+
+
+#Tablas de municipios 
+
+
+
+MUN_COL<-merge(MUN_COL,tablamun, by.x="COD_MUN", by.y="Var1")  
+MUN_COL$Tasa_contagio_x100.000<-MUN_COL$Total_casos/MUN_COL$POB_Total*100000
+
+
+# 10 primeros municipios con mayor tasa  de contagio 
+MUN_COL_10 <-  MUN_COL %>% arrange(desc(Tasa_contagio_x100.000)) %>% slice(1:11)
+
+
+#variables de prevalencia ENF  trabajaria con 1019 municipios
+
+MUN_COL_PREV<-merge(MUN_COL,BASE_COV19_IPM, by.x="COD_MUN", by.y="CodeM") 
+
+
+
+# Analisis de casos de COVID 19
+
+#casos por mes y municipio para el año 2020
+
+datos2020<-basecovid   %>% 
+  filter(año %in% c("2020")) %>% group_by(`Código DIVIPOLA municipio`) %>% 
+  count(mes)
+
+
+#casos por mes y municipio para el año 2021
+
+datos2021<-basecovid   %>% 
+  filter(año %in% c("2021")) %>% group_by(`Código DIVIPOLA municipio`) %>% 
+  count(mes)
+
+
+
+
+
+
+
+
+
+
+
+
+
